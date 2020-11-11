@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'ng_domain' => env('NG_DOMAIN', 'https://6bad9153295a.ngrok.io'),
     /*
     |--------------------------------------------------------------------------
     | Your Telegram Bots

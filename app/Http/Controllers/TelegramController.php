@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\TelegramService;
 use App\Services\TelegramUserService;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Telegram\Bot\FileUpload\InputFile;
+use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Laravel\Facades\Telegram;
+use Telegram\Bot\Methods\Chat;
 
 class TelegramController extends Controller
 {
@@ -18,7 +22,7 @@ class TelegramController extends Controller
     protected $service;
     public function __construct( TelegramUserService $userService, TelegramService $service)
     {
-        $this->ng_domain = env('NG_DOMAIN', null);
+        $this->ng_domain = config('telegram.ng_domain', null);
         $this->access_token = Telegram::getAccessToken();
         $this->userService = $userService;
         $this->service = $service;
@@ -45,12 +49,35 @@ class TelegramController extends Controller
 
         return (string) $result->getBody();
     }
+    protected function downloadFileTelegram($route = '', $params = [], $method = 'GET')
+    {
+        $client = new Client(['base_uri' => 'https://api.telegram.org/file/bot' . $this->access_token . '/']);
+        $result = $client->request($method, $route, $params);
+
+        return (string) $result->getBody();
+    }
     protected function action(Request $request)
     {
-//        Log::info($request);
-        $user = $this->userService->createIfNotExists($request->all());
+        Log::info($request);
 
-        switch ($user->step) {
+//        $file_id = $request['message']['document']['file_id'];
+//        $response = $this->sendTelegramData('getFile', [
+//            'query' => ['file_id' => $file_id]
+//        ]);
+//
+//        $response = json_decode($response, true);
+//        $file_path = $response['result']['file_path'];
+//        $file = $this->downloadFileTelegram($file_path);
+//
+//        Storage::put( 'public/assets/' . $request['message']['document']['file_name'], $file); //return true
+//        Telegram::sendDocument(['chat_id' => $request['message']['chat']['id'], 'caption' => 'salom zohid', 'document' => InputFile::create(storage_path('app/public/assets/'). $request['message']['document']['file_name'])]);
+//       $response = Telegram::sendMessage(['chat_id' => $request['message']['chat']['id'], 'parse_mode' => 'html', 'text' => "<b>Zohid</b>\n\n\n👇  men sizlarga tushuntiraman" ]);
+//       $messageId =  $response->getMessageId();
+//        Telegram::editMessageText(['chat_id' => $request['message']['chat']['id'], 'parse_mode' => 'html', 'message_id' => $messageId, 'text' => "Salom Dunyo"]);
+//            Log::info($response->getMessageId());
+//       $user = $this->userService->createIfNotExists($request->all());
+       $user = User::find(1);
+        switch (0) {
             case 0: {
                 $this->service->sendHello($user);
             }

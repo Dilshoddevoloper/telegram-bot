@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 class UserRepository
 {
     public function createIfNotExists($data) {
-        Log::info($data);
         $user = User::where('chat_id', $data['message']['chat']['id'])->first();
 
         if(!$user) {

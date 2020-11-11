@@ -16,10 +16,8 @@ class TelegramService
      . '! Sizga qanday yordam bera olaman';
 
         $keyboard = [
-            ['7', '8', '9'],
-            ['4', '5', '6'],
-            ['1', '2', '3'],
-            ['0']
+            ['📝 Янги тест жойлаштириш', '📊 Тест натижаларини кўриш'],
+            ['👨‍👩‍👧‍👦 Bot foydalanuvchilarini ko\'rish']
         ];
         $reply_markup = Keyboard::make([
             'keyboard' => $keyboard,
@@ -28,6 +26,4 @@ class TelegramService
         ]);
     Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
     }
-
-
 }
