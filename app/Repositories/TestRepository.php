@@ -7,7 +7,7 @@ namespace App\Repositories;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
-class UserRepository
+class TestRepository
 {
     public function createIfNotExists($data) {
         $user = User::where('chat_id', $data['message']['chat']['id'])->first();
@@ -22,12 +22,6 @@ class UserRepository
             ]);
         }
         return $user;
-    }
-
-    public function setUserStep($user, $step) {
-        $user->update([
-            'step' => $step ?? $user->step + 1
-        ]);
     }
 
 }

@@ -16,7 +16,10 @@ class TelegramUserService
 
     public function createIfNotExists($data) {
         return $this->userRepo->createIfNotExists($data);
-        return $this->userRepo->createIfNotExists($data);
+    }
+
+    public function setUserStep($user, $step = null) {
+        return $this->userRepo->setUserStep($user, $step);
     }
 
 }

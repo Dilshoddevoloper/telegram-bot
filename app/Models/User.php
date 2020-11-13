@@ -24,7 +24,6 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password'
     ];
 
     /**
@@ -32,4 +31,10 @@ class User extends Authenticatable
      *
      * @var array
      */
+    public function exams() {
+        return $this->hasMany('App\Models\Exam', 'user_id' );
+    }
+    public function isAdmin() {
+        return $this->username == config('telegram.admin_username');
+    }
 }

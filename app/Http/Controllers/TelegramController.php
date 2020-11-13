@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\TelegramService;
+use App\Services\AdminTelegramService;
+use App\Services\ExaminerTelegramService;
 use App\Services\TelegramUserService;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
@@ -19,13 +20,15 @@ class TelegramController extends Controller
     protected $ng_domain;
     protected $access_token;
     protected $userService;
-    protected $service;
-    public function __construct( TelegramUserService $userService, TelegramService $service)
+    protected $adminService;
+    protected $examinerService;
+    public function __construct(TelegramUserService $userService, AdminTelegramService $adminService, ExaminerTelegramService $examinerService)
     {
         $this->ng_domain = config('telegram.ng_domain', null);
         $this->access_token = Telegram::getAccessToken();
         $this->userService = $userService;
-        $this->service = $service;
+        $this->adminService = $adminService;
+        $this->examinerService = $examinerService;
     }
 
     protected function setWebhook(Request $request)
@@ -58,7 +61,7 @@ class TelegramController extends Controller
     }
     protected function action(Request $request)
     {
-        Log::info($request);
+        Log::info(data_get($request, '*.chat'));
 
 //        $file_id = $request['message']['document']['file_id'];
 //        $response = $this->sendTelegramData('getFile', [
@@ -75,13 +78,23 @@ class TelegramController extends Controller
 //       $messageId =  $response->getMessageId();
 //        Telegram::editMessageText(['chat_id' => $request['message']['chat']['id'], 'parse_mode' => 'html', 'message_id' => $messageId, 'text' => "Salom Dunyo"]);
 //            Log::info($response->getMessageId());
-//       $user = $this->userService->createIfNotExists($request->all());
-       $user = User::find(1);
-        switch (0) {
-            case 0: {
-                $this->service->sendHello($user);
-            }
-        }
+       $user = $this->userService->createIfNotExists($request->all());
+       if($user->isAdmin()) {
+           switch ($user->step) {
+               case 0: {
+                   $this->adminService->sendHello($user);
+               } break;
+               case 1: {
+                   $this->adminService->selectCategory($user, $request);
+               } break;
+           }
+       } else {
+           switch ($user->step) {
+               case 0: {
+                   $this->examinerService->sendHello($user);
+               }
+           }
+       }
 
     }
 }

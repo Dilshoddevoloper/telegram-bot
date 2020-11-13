@@ -2,6 +2,7 @@
 
 return [
     'ng_domain' => env('NG_DOMAIN', 'https://6bad9153295a.ngrok.io'),
+    'admin_username' => env('TELEGRAM_ADMIN_USERNAME', 'AZIZ_forever'),
     /*
     |--------------------------------------------------------------------------
     | Your Telegram Bots
