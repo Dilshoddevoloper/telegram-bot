@@ -33,6 +33,7 @@ class TelegramController extends Controller
 
     protected function setWebhook(Request $request)
     {
+        dd('zohid');
         dd($this->ng_domain);
         $result = $this->sendTelegramData('setwebhook', [
             'query' => [ 'url' => $this->ng_domain . '/' . $this->access_token ]
@@ -40,12 +41,6 @@ class TelegramController extends Controller
         return $result;
     }
 
-//    protected function getWebhook(Request $request)
-//    {
-//        $result = $this->sendTelegramData('getwebhookInfo', [
-//            'query' => [ 'url' => $this->ng_domain . '/' . $this->access_token ]
-//        ]);
-//    }
     protected function sendTelegramData($route = '', $params = [], $method = 'POST')
     {
         $client = new Client(['base_uri' => 'https://api.telegram.org/bot' . $this->access_token . '/']);

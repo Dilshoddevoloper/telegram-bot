@@ -14,9 +14,9 @@ class AdminTelegramService
     protected $telegramUserService;
     protected $regularService;
     protected $subjectService;
-    public function __construct(TelegramUserService $telegramUserService, RegularService $regularService, SubjectService $subjectService)
+    public function __construct( RegularService $regularService, SubjectService $subjectService)
     {
-        $this->telegramUserService = $telegramUserService;
+        $this->telegramUserService = new TelegramUserService();
         $this->regularService = $regularService;
         $this->subjectService = $subjectService;
     }

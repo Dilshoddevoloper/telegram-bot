@@ -10,12 +10,6 @@ use Telegram\Bot\Laravel\Facades\Telegram;
 
 class RegularService
 {
-    protected $adminTelegramService;
-    public function __construct(AdminTelegramService $adminTelegramService)
-    {
-        $this->adminTelegramService = $adminTelegramService;
-    }
-
     public function checkSelectCategory($data, $user) {
         $result = false;
         if($this->checkText($data)) {
@@ -65,7 +59,7 @@ class RegularService
         $result = false;
         if($this->checkText($data)) {
             if ($data['message']['text'] == '🔙 Asosiy menyuga') {
-               $this->adminTelegramService->sendHomeMarkup($user);
+                (new AdminTelegramService())->sendHomeMarkup($user);
             } else {
                 $result = true;
             }
