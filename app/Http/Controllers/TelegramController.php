@@ -33,6 +33,7 @@ class TelegramController extends Controller
 
     protected function setWebhook(Request $request)
     {
+        dd($this->ng_domain);
         $result = $this->sendTelegramData('setwebhook', [
             'query' => [ 'url' => $this->ng_domain . '/' . $this->access_token ]
         ]);
@@ -61,7 +62,7 @@ class TelegramController extends Controller
     }
     protected function action(Request $request)
     {
-        Log::info(data_get($request, '*.chat'));
+        Log::info($request);
 
 //        $file_id = $request['message']['document']['file_id'];
 //        $response = $this->sendTelegramData('getFile', [
@@ -86,6 +87,9 @@ class TelegramController extends Controller
                } break;
                case 1: {
                    $this->adminService->selectCategory($user, $request);
+               } break;
+               case 2: {
+                   $this->adminService->getSubjectName($user, $request);
                } break;
            }
        } else {

@@ -18,7 +18,7 @@ class UserRepository
                 'first_name' => $data['message']['chat']['first_name'],
                 'last_name' => isset($data['message']['chat']['last_name']) ? $data['message']['chat']['last_name'] : null,
                 'language_code' => $data['message']['from']['language_code'],
-                'username' => isset($data['message']['chat']['username']) ? isset($data['message']['chat']['username']) : null
+                'username' => isset($data['message']['chat']['username']) ? $data['message']['chat']['username'] : null
             ]);
         }
         return $user;
