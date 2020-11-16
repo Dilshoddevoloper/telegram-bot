@@ -21,7 +21,7 @@ class CreateTestsTable extends Migration
             $table->date('date_stop');
             $table->integer('status');
             $table->string('file_path');
-            $table->jsonb('answers');
+            $table->string('answers');
             $table->timestamps();
         });
     }

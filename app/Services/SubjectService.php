@@ -15,4 +15,8 @@ class SubjectService
             'name' => $name
         ]);
     }
+    public function all() {
+        return Subject::all();
+    }
+
 }

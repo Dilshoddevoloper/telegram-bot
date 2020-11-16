@@ -33,12 +33,13 @@ class TelegramController extends Controller
 
     protected function setWebhook(Request $request)
     {
-        dd('zohid');
-        dd($this->ng_domain);
-        $result = $this->sendTelegramData('setwebhook', [
+        return  $this->sendTelegramData('setwebhook', [
             'query' => [ 'url' => $this->ng_domain . '/' . $this->access_token ]
         ]);
-        return $result;
+    }
+    protected function getWebhook(Request $request)
+    {
+        return Telegram::getWebhookInfo();
     }
 
     protected function sendTelegramData($route = '', $params = [], $method = 'POST')
@@ -85,6 +86,15 @@ class TelegramController extends Controller
                } break;
                case 2: {
                    $this->adminService->getSubjectName($user, $request);
+               } break;
+               case 3: {
+                   $this->adminService->selectSubject($user, $request);
+               } break;
+               case 4: {
+                   $this->adminService->getAnswers($user, $request);
+               } break;
+               case 5: {
+                   $this->adminService->getTestStopDate($user, $request);
                } break;
            }
        } else {

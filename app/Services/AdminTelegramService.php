@@ -5,6 +5,7 @@ namespace App\Services;
 
 
 use App\Models\Subject;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Laravel\Facades\Telegram;
@@ -14,11 +15,13 @@ class AdminTelegramService
     protected $telegramUserService;
     protected $regularService;
     protected $subjectService;
-    public function __construct( RegularService $regularService, SubjectService $subjectService)
+    protected $testService;
+    public function __construct( RegularService $regularService, SubjectService $subjectService, TelegramUserService $telegramUserService, TestService $testService)
     {
-        $this->telegramUserService = new TelegramUserService();
+        $this->telegramUserService = $telegramUserService;
         $this->regularService = $regularService;
         $this->subjectService = $subjectService;
+        $this->testService = $testService;
     }
 
     public function sendHello($user)
@@ -55,8 +58,13 @@ class AdminTelegramService
     {
 //        Log::info($this->regularService->checkSelectCategory($data, $user));
         if ($this->regularService->checkSelectCategory($data, $user)) {
-            if ($data['message']['text'] == "📚 Fan qo'shish") {
-                $this->selectSubjectAdd($user);
+            switch ($data['message']['text']) {
+                case "📚 Fan qo'shish": {
+                    $this->selectSubjectAdd($user);
+                } break;
+                case "📝 Yangi test joylashtirish": {
+                    $this->selectTestAdd($user);
+                } break;
             }
 
         } else {
@@ -81,7 +89,7 @@ class AdminTelegramService
     public function getSubjectName($user, $data)
     {
         if($this->regularService->checkSubjectName($data, $user)) {
-            $subject = $this->subjectService->create($data['message']['name']);
+            $subject = $this->subjectService->create($data['message']['text']);
             if($subject) {
                 $text = " <b>". $subject->name ."</b>  fani muvaffaqiyatli qo'shildi🎉";
 
@@ -92,5 +100,121 @@ class AdminTelegramService
         }
     }
 
+    public function selectTestAdd($user)
+    {
+        $text = "Fanni tanlang:";
+        $subjects = $this->subjectService->all()->pluck('name');
+        $keyboard = $subjects->chunk(3);
+        $keyboard->push(['🔙 Asosiy menyuga']);
 
+        $reply_markup = Keyboard::make([
+            'keyboard' => $keyboard,
+            'resize_keyboard' => true,
+            'one_time_keyboard' => true
+        ]);
+        Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
+        $this->telegramUserService->setUserStep($user, 3);
+    }
+
+    public function selectSubject($user, $data)
+    {
+        if($this->regularService->checkSelectSubject($data, $user)) {
+            if ($data['message']['text'] != '🔙 Asosiy menyuga') {
+
+                $this->testService->create($data['message']['text']);
+
+                $text = "Fan: <b>". $data['message']['text'] . "</b> \n \n \n Test javoblarini (,) bilan kiriting: \n Masalan:  <b>A,B,C,D ...</b>";
+                $keyboard = [['❌ Bekor qilish']];
+
+                $reply_markup = Keyboard::make([
+                    'keyboard' => $keyboard,
+                    'resize_keyboard' => true,
+                    'one_time_keyboard' => true
+                ]);
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup ]);
+                $this->telegramUserService->setUserStep($user, 4);
+            } else {
+                $this->selectTestAdd($user);
+            }
+        }
+    }
+    public function getAnswers($user, $data)
+    {
+        if ($data['message']['text'] != '❌ Bekor qilish') {
+            if($this->regularService->checkAnswers($data, $user)) {
+
+                $test_form = $this->testService->update( 'answers', $data['message']['text']);
+                $answers = explode(',', $data['message']['text']);
+                $text = "Fan: <b>". $test_form->subject->name . "</b> \n";
+                foreach ($answers as $key => $answer) {
+                    $text .= "<b>". ($key + 1) .") " . $answer . "</b>\n";
+                }
+                $text .= "\n \n Test yakunlanish muddatini (kk.oo.yyyy) formatda kiriting: \n Masalan:  <b>01.01.1991</b>";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+                $this->telegramUserService->setUserStep($user, 5);
+            } else {
+                $text = "❌ Noto'g'ri format \n \n Javoblarini (,) bilan kiriting: \n Masalan  <b>A,B,C,D ...</b>";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+            }
+        } else {
+            $this->testService->deleteLast();
+            $this->sendHomeMarkup($user);
+        }
+    }
+    public function getTestStopDate($user, $data)
+    {
+        if ($data['message']['text'] != '❌ Bekor qilish') {
+            if($this->regularService->checkDate($data, $user)) {
+
+                $test_form = $this->testService->update( 'date_stop', $data['message']['text']);
+                $answers = explode(',', $test_form->answers);
+                $text = "Fan: <b>". $test_form->subject->name . "</b> \n";
+                foreach ($answers as $key => $answer) {
+                    $text .= "<b>". ($key + 1) .") " . $answer . "</b>\n";
+                }
+                $text .= "Test boshlanish muddati: <b>" . Carbon::parse($test_form->date_start)->format('d.m.Y') . "</b>\n";
+                $text .= "Test yakunlanish muddati: <b>" . Carbon::parse($test_form->date_stop)->format('d.m.Y') . "</b> ";
+                $text .= "\n \n Test faylini rasm ko'rinishida yuklang:";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+                $this->telegramUserService->setUserStep($user, 6);
+            } else {
+                $text = "❌ Noto'g'ri format \n \n Test yakunlanish muddatini (kk.oo.yyyy) formatda kiriting: \n Masalan:  <b>01.01.1991</b>";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+            }
+        } else {
+            $this->testService->deleteLast();
+            $this->sendHomeMarkup($user);
+        }
+    }
+    public function getTestFile($user, $data)
+    {
+        if ($data['message']['text'] != '❌ Bekor qilish') {
+            if($this->regularService->checkPhoto($data, $user)) {
+
+                $test_form = $this->testService->update( 'date_stop', $data['message']['text']);
+                $answers = explode(',', $test_form->answers);
+                $text = "Fan: <b>". $test_form->subject->name . "</b> \n";
+                foreach ($answers as $key => $answer) {
+                    $text .= "<b>". ($key + 1) .") " . $answer . "</b>\n";
+                }
+                $text .= "Test boshlanish muddati: <b>" . Carbon::parse($test_form->date_start)->format('d.m.Y') . "</b>\n";
+                $text .= "Test yakunlanish muddati: <b>" . Carbon::parse($test_form->date_stop)->format('d.m.Y') . "</b> ";
+                $text .= "\n \n Test faylini rasm ko'rinishida yuklang:";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+                $this->telegramUserService->setUserStep($user, 6);
+            } else {
+                $text = "❌ Noto'g'ri format \n \n TEst faylini rasm shaklida yuklang";
+
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+            }
+        } else {
+            $this->testService->deleteLast();
+            $this->sendHomeMarkup($user);
+        }
+    }
 }

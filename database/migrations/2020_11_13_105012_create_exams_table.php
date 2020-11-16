@@ -17,7 +17,7 @@ class CreateExamsTable extends Migration
             $table->id();
             $table->integer('user_id');
             $table->integer('test_id');
-            $table->jsonb('answers');
+            $table->string('answers');
             $table->timestamps();
         });
     }

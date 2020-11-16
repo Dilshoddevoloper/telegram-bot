@@ -14,5 +14,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'TelegramController@setWebhook');
+Route::get('/getWebhook', 'TelegramController@getWebhook');
 
 Route::post(Telegram::getAccessToken(), 'TelegramController@action')->name('telegram');

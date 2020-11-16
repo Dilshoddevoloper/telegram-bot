@@ -9,7 +9,7 @@ class Exam extends Model
 {
     use HasFactory;
 
-    protected $guarded = 'id';
+    protected $guarded = ['id'];
 
     protected $casts = [
         'answers' => 'array'
