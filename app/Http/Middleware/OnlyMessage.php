@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Repositories\UserRepository;
 use Closure;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,7 @@ class OnlyMessage
      */
     public function handle($request, Closure $next)
     {
-      if($request && isset($request['message'])) {
+      if($request && ( isset($request['message']) || isset($request['callback_query']) )) {
           return $next($request);
       }
       abort(200);

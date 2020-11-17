@@ -238,17 +238,26 @@ class AdminTelegramService
     public function selectUsersShow($user, $data)
     {
         $text = "<b> Foydalanuvchilar:</b> \n";
-        $users_text = $this->telegramUserService->getUsers(0);
-        $text .= $users_text;
-        $keyboard = [
-            [[ 'text' => '⏮', 'callback_data' => 'page_0' ], [ 'text' => '❌', 'callback_data' => 'delete' ], [ 'text' => '⏭', 'callback_data' => 'page_2']]
-        ];
-        $reply_markup = Keyboard::make([
-            'inline_keyboard' => $keyboard,
-            'resize_keyboard' => true,
-            'one_time_keyboard' => true
-        ]);
-        Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
-        $this->telegramUserService->setUserStep($user, 7);
+        $page = $this->telegramUserService->getPage($data);
+        if($page == 'delete') {
+            Telegram::deleteMessage(['chat_id' => $user->chat_id, 'message_id' => $user->data['message_id']]);
+            $this->sendHomeMarkup($user);
+        } else {
+            $users_text = $this->telegramUserService->getUsers($page);
+            $text .= $users_text;
+            $keyboard = [[
+                [ 'text' => '⏮', 'callback_data' => ['page' => $page ? $page - 1 : 0] ],
+                [ 'text' => '❌', 'callback_data' => ['page' => 'delete'] ],
+                [ 'text' => '⏭', 'callback_data' => ['page' => $page + 1]]
+            ]];
+            $reply_markup = Keyboard::make([
+                'inline_keyboard' => $keyboard,
+                'resize_keyboard' => true,
+                'one_time_keyboard' => true
+            ]);
+            $response = Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
+            $this->telegramUserService->setUserStep($user, 7);
+            $this->telegramUserService->setUserData($user, $response);
+        }
     }
 }
