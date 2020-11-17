@@ -16,11 +16,11 @@ class CreateTestsTable extends Migration
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
             $table->integer('subject_id');
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->date('date_start');
             $table->date('date_stop');
-            $table->integer('status');
-            $table->string('file_path');
+            $table->integer('status')->default(1);
+            $table->text('file_path');
             $table->string('answers');
             $table->timestamps();
         });

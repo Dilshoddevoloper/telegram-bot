@@ -20,7 +20,7 @@ class CreateTestFormsTable extends Migration
             $table->date('date_start')->nullable();
             $table->date('date_stop')->nullable();
             $table->integer('status')->nullable();
-            $table->string('file_path')->nullable();
+            $table->text('file_path')->nullable();
             $table->jsonb('answers')->nullable();
             $table->timestamps();
         });

@@ -111,7 +111,7 @@ class RegularService
     }
 
     public function checkPhoto($data, $user) {
-        return $data['message'] && $data['message']['photo'];
+        return (isset($data['message']) && isset($data['message']['photo']));
     }
 
 

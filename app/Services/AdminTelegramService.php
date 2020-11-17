@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -178,7 +179,7 @@ class AdminTelegramService
                 $text .= "Test yakunlanish muddati: <b>" . Carbon::parse($test_form->date_stop)->format('d.m.Y') . "</b> ";
                 $text .= "\n \n Test faylini rasm ko'rinishida yuklang:";
 
-                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text ]);
                 $this->telegramUserService->setUserStep($user, 6);
             } else {
                 $text = "❌ Noto'g'ri format \n \n Test yakunlanish muddatini (kk.oo.yyyy) formatda kiriting: \n Masalan:  <b>01.01.1991</b>";
@@ -192,29 +193,43 @@ class AdminTelegramService
     }
     public function getTestFile($user, $data)
     {
-        if ($data['message']['text'] != '❌ Bekor qilish') {
+        if (isset($data['message']['text']) && $data['message']['text'] == '❌ Bekor qilish') {
+            $this->testService->deleteLast();
+            $this->sendHomeMarkup($user);
+        } else if(isset($data['message']['text']) && $data['message']['text'] == '✅ Saqlash') {
+            $test = $this->testService->createTrue();
+            $answers = explode(',', $test->answers);
+            $text = "🎉 Test muvaffaqiyatli yaratildi \n";
+            $text .= "Fan: <b>". $test->subject->name . "</b> \n Javoblar: \n";
+            foreach ($answers as $key => $answer) {
+                $text .= "<b>". ($key + 1) .") " . $answer . "</b>\n";
+            }
+            $text .= "Test boshlanish muddati: <b>" . Carbon::parse($test->date_start)->format('d.m.Y') . "</b>\n";
+            $text .= "Test yakunlanish muddati: <b>" . Carbon::parse($test->date_stop)->format('d.m.Y') . "</b> ";
+            foreach (explode(',', $test->file_path) as $file_id) {
+                Telegram::sendPhoto(['chat_id' => $user->chat_id, 'photo' => $file_id ]);
+            }
+
+            Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
+            $this->sendHomeMarkup($user);
+        } else {
             if($this->regularService->checkPhoto($data, $user)) {
+                $test_form = $this->testService->storeFile($data['message']['photo']);
 
-                $test_form = $this->testService->update( 'date_stop', $data['message']['text']);
-                $answers = explode(',', $test_form->answers);
-                $text = "Fan: <b>". $test_form->subject->name . "</b> \n";
-                foreach ($answers as $key => $answer) {
-                    $text .= "<b>". ($key + 1) .") " . $answer . "</b>\n";
-                }
-                $text .= "Test boshlanish muddati: <b>" . Carbon::parse($test_form->date_start)->format('d.m.Y') . "</b>\n";
-                $text .= "Test yakunlanish muddati: <b>" . Carbon::parse($test_form->date_stop)->format('d.m.Y') . "</b> ";
-                $text .= "\n \n Test faylini rasm ko'rinishida yuklang:";
+                $keyboard = [['✅ Saqlash', '❌ Bekor qilish']];
 
-                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
-                $this->telegramUserService->setUserStep($user, 6);
+                $reply_markup = Keyboard::make([
+                    'keyboard' => $keyboard,
+                    'resize_keyboard' => true,
+                    'one_time_keyboard' => true
+                ]);
+                $text = "✅ Rasm muvaffaqiyatli saqlandi! \n \n Yana rasm yuklang yoki <b> Saqlash</b> tugmasini bosing👇";
+                Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup ]);
             } else {
-                $text = "❌ Noto'g'ri format \n \n TEst faylini rasm shaklida yuklang";
+                $text = "❌ Noto'g'ri format \n \n Test faylini rasm shaklida yuklang!";
 
                 Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
             }
-        } else {
-            $this->testService->deleteLast();
-            $this->sendHomeMarkup($user);
         }
     }
 }

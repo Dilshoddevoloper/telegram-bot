@@ -49,13 +49,6 @@ class TelegramController extends Controller
 
         return (string) $result->getBody();
     }
-    protected function downloadFileTelegram($route = '', $params = [], $method = 'GET')
-    {
-        $client = new Client(['base_uri' => 'https://api.telegram.org/file/bot' . $this->access_token . '/']);
-        $result = $client->request($method, $route, $params);
-
-        return (string) $result->getBody();
-    }
     protected function action(Request $request)
     {
         Log::info($request);
@@ -95,6 +88,9 @@ class TelegramController extends Controller
                } break;
                case 5: {
                    $this->adminService->getTestStopDate($user, $request);
+               } break;
+               case 6: {
+                   $this->adminService->getTestFile($user, $request);
                } break;
            }
        } else {
