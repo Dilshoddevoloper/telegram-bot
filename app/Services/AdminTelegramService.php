@@ -66,6 +66,9 @@ class AdminTelegramService
                 case "📝 Yangi test joylashtirish": {
                     $this->selectTestAdd($user);
                 } break;
+                case "👨‍👩‍👧‍👦 Bot foydalanuvchilarini ko'rish": {
+                    $this->selectUsersShow($user ,$data);
+                } break;
             }
 
         } else {
@@ -231,5 +234,21 @@ class AdminTelegramService
                 Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text]);
             }
         }
+    }
+    public function selectUsersShow($user, $data)
+    {
+        $text = "<b> Foydalanuvchilar:</b> \n";
+        $users_text = $this->telegramUserService->getUsers(0);
+        $text .= $users_text;
+        $keyboard = [
+            [[ 'text' => '⏮', 'callback_data' => 'page_0' ], [ 'text' => '❌', 'callback_data' => 'delete' ], [ 'text' => '⏭', 'callback_data' => 'page_2']]
+        ];
+        $reply_markup = Keyboard::make([
+            'inline_keyboard' => $keyboard,
+            'resize_keyboard' => true,
+            'one_time_keyboard' => true
+        ]);
+        Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
+        $this->telegramUserService->setUserStep($user, 7);
     }
 }

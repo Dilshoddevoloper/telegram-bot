@@ -30,4 +30,8 @@ class UserRepository
         ]);
     }
 
+    public function getUsers($page) {
+        return User::where('username', '!=', config('telegram.admin_username'))->offset($page * 10)->limit(10)->get();
+    }
+
 }

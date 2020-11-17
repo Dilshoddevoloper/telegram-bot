@@ -92,6 +92,9 @@ class TelegramController extends Controller
                case 6: {
                    $this->adminService->getTestFile($user, $request);
                } break;
+               case 7: {
+                   $this->adminService->selectUsersShow($user, $request);
+               } break;
            }
        } else {
            switch ($user->step) {
