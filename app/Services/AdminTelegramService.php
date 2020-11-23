@@ -239,16 +239,15 @@ class AdminTelegramService
     {
         $text = "<b> Foydalanuvchilar:</b> \n";
         $page = $this->telegramUserService->getPage($data);
-        if($page == 'delete') {
-            Telegram::deleteMessage(['chat_id' => $user->chat_id, 'message_id' => $user->data['message_id']]);
-            $this->sendHomeMarkup($user);
-        } else {
+        Log::info('page: '. $page);
+        Log::info('show: '. $page != 'delete');
+        if($page != 'delete') {
             $users_text = $this->telegramUserService->getUsers($page);
             $text .= $users_text;
             $keyboard = [[
-                [ 'text' => '⏮', 'callback_data' => ['page' => $page ? $page - 1 : 0] ],
-                [ 'text' => '❌', 'callback_data' => ['page' => 'delete'] ],
-                [ 'text' => '⏭', 'callback_data' => ['page' => $page + 1]]
+                [ 'text' => '⏮', 'callback_data' => 'page_' . ($page ? $page - 1 : 0)  ],
+                [ 'text' => '❌', 'callback_data' => 'page_delete' ],
+                [ 'text' => '⏭', 'callback_data' => 'page_' . ($page + 1) ]
             ]];
             $reply_markup = Keyboard::make([
                 'inline_keyboard' => $keyboard,
@@ -257,7 +256,10 @@ class AdminTelegramService
             ]);
             $response = Telegram::sendMessage(['chat_id' =>$user->chat_id, 'parse_mode'=>'html','text' => $text, 'reply_markup' => $reply_markup]);
             $this->telegramUserService->setUserStep($user, 7);
-            $this->telegramUserService->setUserData($user, $response);
+            $this->telegramUserService->setUserData($user, $response->getMessageId());
+        } else {
+            Telegram::deleteMessage(['chat_id' => $user->chat_id, 'message_id' => json_decode($user->data)->message_id]);
+            $this->sendHomeMarkup($user);
         }
     }
 }

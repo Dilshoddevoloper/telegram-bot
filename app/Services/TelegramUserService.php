@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Repositories\UserRepository;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class TelegramUserService
 {
@@ -38,11 +39,15 @@ class TelegramUserService
     }
 
     public function getPage($data) {
-        return isset($data['callback_query']) ? $data['callback_query']['data']['page']: 0;
+        $page =  ($data && isset($data['callback_query'])) ? $data['callback_query']['data']: 0;
+        if($page == 0) { return 0; }
+        else {
+            return explode('_', $page)[1];
+        }
     }
 
-    public function setUserData($user, $data) {
-        return $this->userRepo->setUserData($user, $data);
+    public function setUserData($user, $message_id) {
+        return $this->userRepo->setUserData($user, $message_id);
     }
 
 }
